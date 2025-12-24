@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LCC 訂房查詢</title>
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0f">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --bg-hover: #22222f;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888aa;
+            --accent-gold: #d4af37;
+            --accent-gold-dim: #a08020;
+            --accent-red: #e74c3c;
+            --accent-green: #2ecc71;
+            --accent-blue: #3498db;
+            --border-color: #2a2a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans TC', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+
+        /* Login Screen */
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 350px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .login-icon { font-size: 4rem; margin-bottom: 20px; }
+        .login-title { font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 10px; }
+        .login-subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 30px; }
+
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+
+        .password-input::placeholder {
+            letter-spacing: normal;
+            color: var(--text-secondary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent-gold);
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .login-btn:active { transform: scale(0.98); }
+        .login-btn:disabled { background: var(--text-secondary); cursor: not-allowed; }
+
+        .login-error {
+            color: var(--accent-red);
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .login-error.show { display: block; }
+
+        /* Main App */
+        .app-screen { display: none; }
+        .app-screen.active { display: block; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 { font-size: 1.3rem; color: var(--accent-gold); letter-spacing: 1px; }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn-refresh { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .btn-logout { background: transparent; color: var(--text-secondary); border-color: var(--border-color); font-size: 0.8rem; padding: 8px 12px; }
+
+        .data-info {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+        .status-dot.loading { background: var(--accent-blue); animation: pulse 0.5s infinite; }
+        .status-dot.error { background: var(--accent-red); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Calendar */
+        .calendar-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav button {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .calendar-month { font-size: 1.1rem; font-weight: 500; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            padding: 2px;
+            min-height: 44px;
+            transition: all 0.15s;
+        }
+
+        .calendar-day:active { transform: scale(0.95); }
+        .calendar-day.selected { background: var(--accent-gold); color: var(--bg-primary); border-color: var(--accent-gold); }
+        .calendar-day.has-guests { background: rgba(212,175,55,0.25); }
+        .calendar-day .day-number { font-size: 0.9rem; font-weight: 500; }
+        .calendar-day .guest-count { font-size: 0.6rem; color: var(--text-secondary); }
+        .calendar-day.selected .guest-count { color: var(--bg-primary); }
+        .calendar-day.other-month { opacity: 0.3; pointer-events: none; }
+
+        /* Date Info */
+        .date-info {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--accent-gold);
+            text-align: center;
+        }
+
+        .date-title { font-size: 1.2rem; font-weight: 700; color: var(--accent-gold); }
+        .date-subtitle { color: var(--text-secondary); font-size: 0.8rem; margin-top: 3px; }
+
+        /* Stats */
+        .section-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--accent-gold); }
+        .stat-label { font-size: 0.7rem; color: var(--text-secondary); margin-top: 3px; }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, var(--accent-gold-dim), #705a10);
+            border-color: var(--accent-gold);
+            grid-column: span 2;
+        }
+        .stat-card.highlight .stat-value { color: #fff; font-size: 1.8rem; }
+        .stat-card.highlight .stat-label { color: rgba(255,255,255,0.8); }
+
+        .stat-card.cumulative {
+            background: linear-gradient(135deg, #1a3a5c, #0d2840);
+            border-color: var(--accent-blue);
+        }
+        .stat-card.cumulative .stat-value { color: var(--accent-blue); font-size: 1.5rem; }
+
+        /* Calc Section */
+        .calc-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .calc-section h3 { font-size: 0.9rem; color: var(--accent-gold); margin-bottom: 12px; }
+        .calc-section.cumulative { border-color: var(--accent-blue); }
+        .calc-section.cumulative h3 { color: var(--accent-blue); }
+
+        .calc-item {
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .calc-label { color: var(--text-secondary); }
+        .calc-formula { font-size: 0.7rem; color: var(--text-secondary); }
+        .calc-value { font-weight: 700; color: var(--accent-gold); }
+
+        .calc-total {
+            background: var(--accent-gold-dim);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .calc-total .calc-label { color: #fff; font-weight: 500; }
+        .calc-total .calc-value { color: #fff; font-size: 1.2rem; }
+
+        .calc-section.cumulative .calc-total { background: rgba(52,152,219,0.4); }
+        .calc-section.cumulative .calc-value { color: var(--accent-blue); }
+        .calc-section.cumulative .calc-total .calc-value { color: #fff; }
+
+        /* Room Stats */
+        .room-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+        .room-chip {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .room-chip .type { color: var(--accent-blue); font-weight: 500; }
+        .room-chip .count { color: var(--accent-gold); font-weight: 700; }
+
+        /* Filters */
+        .filters { display: flex; gap: 10px; margin-bottom: 15px; }
+
+        select {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+
+        /* Table */
+        .table-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .table-header {
+            padding: 12px 15px;
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 { font-size: 0.95rem; }
+        .record-count { color: var(--text-secondary); font-size: 0.8rem; }
+
+        .table-container { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+
+        .room-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .room-RC01, .room-RC05 { background: rgba(231,76,60,0.2); color: #e74c3c; }
+        .room-JW06 { background: rgba(155,89,182,0.2); color: #9b59b6; }
+        .room-JW01, .room-JW01T { background: rgba(52,152,219,0.2); color: #3498db; }
+        .room-OK01, .room-OK01T { background: rgba(46,204,113,0.2); color: #2ecc71; }
+        .room-GM01, .room-GM01T { background: rgba(241,196,15,0.2); color: #f1c40f; }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .loading-overlay.hidden { display: none; }
+        .loading-spinner {
+            width: 50px; height: 50px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-text { margin-top: 15px; color: var(--text-secondary); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 400px) {
+            .container { padding: 10px; }
+            h1 { font-size: 1.1rem; }
+            .calendar-day { min-height: 38px; }
+            .calendar-day .day-number { font-size: 0.8rem; }
+            .stat-value { font-size: 1.3rem; }
+            .stat-card.highlight .stat-value { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-icon">🎰</div>
+            <div class="login-title">LCC 訂房查詢</div>
+            <div class="login-subtitle">請輸入密碼進入系統</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="密碼" maxlength="10" inputmode="numeric">
+            <button class="login-btn" id="loginBtn">進入系統</button>
+            <div class="login-error" id="loginError">密碼錯誤，請重試</div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">載入資料中...</div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-screen" id="appScreen">
+        <div class="container">
+            <header>
+                <h1>🎰 LCC 訂房查詢</h1>
+                <div class="header-right">
+                    <div class="data-info">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="dataStatus">-</span>
+                    </div>
+                    <button class="btn btn-refresh" id="refreshBtn">🔄</button>
+                    <button class="btn btn-logout" id="logoutBtn">登出</button>
+                </div>
+            </header>
+
+            <!-- Calendar -->
+            <div class="calendar-section">
+                <div class="calendar-nav">
+                    <button id="prevMonth">◀</button>
+                    <span class="calendar-month" id="currentMonth"></span>
+                    <button id="nextMonth">▶</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <!-- Date Info -->
+            <div class="date-info" id="dateInfo" style="display: none;">
+                <div class="date-title" id="dateTitle"></div>
+                <div class="date-subtitle">當晚住宿</div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <select id="roomTypeFilter"><option value="">全部房型</option></select>
+                <select id="lineHeadFilter"><option value="">全部線頭</option></select>
+            </div>
+
+            <!-- 當晚統計 -->
+            <div class="section-label">🌙 當晚住宿統計</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="dayGuests">0</div>
+                    <div class="stat-label">住宿人數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="dayBuyCode">0</div>
+                    <div class="stat-label">買碼合計</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-value" id="dayWashing">0 萬</div>
+                    <div class="stat-label">當晚所需洗碼量</div>
+                </div>
+            </div>
+
+            <!-- 房型分布 -->
+            <div class="section-label">🏨 房型分布（當晚）</div>
+            <div class="room-stats" id="roomStats"></div>
+
+            <!-- 當晚洗碼明細 -->
+            <div class="calc-section">
+                <h3>💰 當晚洗碼明細</h3>
+                <div id="dayCalcGrid"></div>
+                <div class="calc-total">
+                    <span class="calc-label">當晚總計</span>
+                    <span class="calc-value" id="dayCalcTotal">0 萬</span>
+                </div>
+            </div>
+
+            <!-- 月累計 -->
+            <div class="section-label" id="cumLabel">📊 本月累計</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="cumNights">0</div>
+                    <div class="stat-label">累計住宿晚數</div>
+                </div>
+                <div class="stat-card cumulative">
+                    <div class="stat-value" id="cumWashing">0 萬</div>
+                    <div class="stat-label">累計所需洗碼量</div>
+                </div>
+            </div>
+
+            <!-- 累計洗碼明細 -->
+            <div class="calc-section cumulative">
+                <h3>📈 月累計洗碼明細</h3>
+                <div id="cumCalcGrid"></div>
+                <div class="calc-total">
+                    <span class="calc-label">累計總計</span>
+                    <span class="calc-value" id="cumCalcTotal">0 萬</span>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>📋 當晚住宿名單</h2>
+                    <span class="record-count" id="recordCount">0 筆</span>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>房型</th>
+                                <th>入住</th>
+                                <th>退房</th>
+                                <th>線頭</th>
+                                <th>買碼</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 設定 =====
+        const API_URL = "https://script.google.com/macros/s/AKfycbxyCyNhIjoo8xLkwmw5CS0B9JoclyoQnIgjOKtE3gPhu6dxzecbi9WlEAB0CoTrZLg3/exec";
+        const PASSWORD = "5678";
+        
+        // ===== 全域變數 =====
+        let allBookings = [];
+        let currentMonth = new Date();
+        let selectedDate = null;
+        let isLoggedIn = localStorage.getItem('lcc_logged_in') === 'true';
+
+        // 洗碼係數
+        const WASHING_RATES = {
+            'Mass': { 'RC05': 500, 'RC01': 200, 'JW06': 200, 'JW01': 80, 'JW01T': 80, 'OK01': 80, 'OK01T': 80, 'GM01': 80, 'GM01T': 80 },
+            'UT$': { 'RC05': 7000, 'RC01': 7000, 'JW06': 7000, 'JW01': 6000, 'JW01T': 6000, 'OK01': 6000, 'OK01T': 6000, 'GM01': 6000, 'GM01T': 6000 }
+        };
+        const HALF_DAY_RATE = { 'Mass': 30, 'UT$': 0 };
+
+        // ===== DOM =====
+        const loginScreen = document.getElementById('loginScreen');
+        const appScreen = document.getElementById('appScreen');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+
+        // ===== 登入邏輯 =====
+        function showLogin() {
+            loginScreen.style.display = 'flex';
+            appScreen.classList.remove('active');
+        }
+
+        function showApp() {
+            loginScreen.style.display = 'none';
+            appScreen.classList.add('active');
+        }
+
+        loginBtn.onclick = () => tryLogin();
+        passwordInput.onkeydown = (e) => { if (e.key === 'Enter') tryLogin(); };
+
+        async function tryLogin() {
+            const pwd = passwordInput.value.trim();
+            if (!pwd) return;
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = '驗證中...';
+            loginError.classList.remove('show');
+
+            try {
+                // 驗證密碼並載入資料
+                const success = await loadData(pwd);
+                if (success) {
+                    localStorage.setItem('lcc_logged_in', 'true');
+                    localStorage.setItem('lcc_pwd', pwd);
+                    showApp();
+                } else {
+                    loginError.classList.add('show');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            } catch (err) {
+                loginError.textContent = '連線錯誤，請稍後再試';
+                loginError.classList.add('show');
+            }
+
+            loginBtn.disabled = false;
+            loginBtn.textContent = '進入系統';
+        }
+
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.removeItem('lcc_logged_in');
+            localStorage.removeItem('lcc_pwd');
+            location.reload();
+        };
+
+        // ===== 載入資料 =====
+        async function loadData(pwd) {
+            loadingOverlay.classList.remove('hidden');
+            document.getElementById('statusDot').classList.add('loading');
+            document.getElementById('dataStatus').textContent = '載入中...';
+
+            try {
+                const response = await fetch(`${API_URL}?pwd=${encodeURIComponent(pwd)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    loadingOverlay.classList.add('hidden');
+                    document.getElementById('statusDot').classList.remove('loading');
+                    document.getElementById('statusDot').classList.add('error');
+                    return false;
+                }
+
+                allBookings = data.map(row => ({
+                    cardNo: row['卡號'] || '',
+                    name: row['姓名'] || '',
+                    roomType: row['房型'] || '',
+                    checkIn: parseDate(row['入住']),
+                    checkOut: parseDate(row['退房']),
+                    days: parseInt(row['天數']) || 0,
+                    halfDay: row['半天'] || '',
+                    lineHead: row['線頭'] || '',
+                    player: row['玩家'] || '',
+                    buyCode: parseFloat(row['買碼']) || 0,
+                    massType: row['Mass/UT$'] || 'Mass'
+                })).filter(b => b.checkIn && b.roomType);
+
+                initUI();
+                updateStatus(allBookings.length);
+
+                const dates = allBookings.map(b => b.checkIn).filter(d => d);
+                if (dates.length) {
+                    const max = new Date(Math.max(...dates));
+                    currentMonth = new Date(max.getFullYear(), max.getMonth(), 1);
+                    selectedDate = new Date();
+                    selectedDate.setHours(0,0,0,0);
+                    if (selectedDate > max) selectedDate = max;
+                }
+                renderCalendar();
+                if (selectedDate) updateView(selectedDate);
+
+                loadingOverlay.classList.add('hidden');
+                return true;
+
+            } catch (err) {
+                console.error(err);
+                loadingOverlay.classList.add('hidden');
+                document.getElementById('statusDot').classList.remove('loading');
+                document.getElementById('statusDot').classList.add('error');
+                document.getElementById('dataStatus').textContent = '錯誤';
+                return false;
+            }
+        }
+
+        document.getElementById('refreshBtn').onclick = async () => {
+            const pwd = localStorage.getItem('lcc_pwd');
+            if (pwd) await loadData(pwd);
+        };
+
+        // ===== 工具函數 =====
+        function parseDate(str) {
+            if (!str) return null;
+            if (str instanceof Date) return new Date(str.getFullYear(), str.getMonth(), str.getDate());
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            return null;
+        }
+
+        function formatDate(d) {
+            if (!d) return '-';
+            return `${d.getMonth()+1}/${d.getDate()}`;
+        }
+
+        function formatDateFull(d) {
+            return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+        }
+
+        function getDateKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function parseDateKey(key) {
+            const p = key.split('-');
+            return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+        }
+
+        function updateStatus(n) {
+            const dot = document.getElementById('statusDot');
+            dot.classList.remove('loading', 'error');
+            document.getElementById('dataStatus').textContent = `${n} 筆`;
+        }
+
+        // ===== UI 初始化 =====
+        function initUI() {
+            const rooms = [...new Set(allBookings.map(b => b.roomType))].sort();
+            const lines = [...new Set(allBookings.map(b => b.lineHead).filter(l => l))].sort();
+
+            document.getElementById('roomTypeFilter').innerHTML = '<option value="">全部房型</option>' + rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+            document.getElementById('lineHeadFilter').innerHTML = '<option value="">全部線頭</option>' + lines.map(l => `<option value="${l}">${l}</option>`).join('');
+
+            document.getElementById('prevMonth').onclick = () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); };
+            document.getElementById('nextMonth').onclick = () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); };
+            
+            ['roomTypeFilter', 'lineHeadFilter'].forEach(id => {
+                document.getElementById(id).onchange = () => { if (selectedDate) updateView(selectedDate); };
+            });
+        }
+
+        // ===== 住宿判斷 =====
+        function isStayingOnNight(booking, date) {
+            if (!booking.checkIn || !booking.checkOut) return false;
+            return date.getTime() >= booking.checkIn.getTime() && date.getTime() < booking.checkOut.getTime();
+        }
+
+        function getMonthlyStayNights(bookings, endDate) {
+            const monthStart = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+            let totalNights = 0;
+            const roomNights = {};
+
+            bookings.forEach(b => {
+                if (!b.checkIn || !b.checkOut) return;
+                
+                let current = new Date(Math.max(b.checkIn.getTime(), monthStart.getTime()));
+                const end = new Date(Math.min(b.checkOut.getTime(), endDate.getTime() + 86400000));
+                
+                while (current < end && current <= endDate) {
+                    if (current.getMonth() === endDate.getMonth() && current.getFullYear() === endDate.getFullYear()) {
+                        totalNights++;
+                        const key = `${b.massType || 'Mass'}_${b.roomType}`;
+                        roomNights[key] = (roomNights[key] || 0) + 1;
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+            });
+
+            return { totalNights, roomNights };
+        }
+
+        // ===== 日曆 =====
+        function renderCalendar() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            document.getElementById('currentMonth').textContent = `${year}年${month+1}月`;
+
+            const first = new Date(year, month, 1);
+            const last = new Date(year, month + 1, 0);
+            const startDay = first.getDay();
+
+            const guestCounts = {};
+            for (let day = 1; day <= last.getDate(); day++) {
+                const date = new Date(year, month, day);
+                const count = allBookings.filter(b => isStayingOnNight(b, date)).length;
+                if (count > 0) guestCounts[getDateKey(date)] = count;
+            }
+
+            let html = ['日','一','二','三','四','五','六'].map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+
+            const prev = new Date(year, month, 0);
+            for (let i = startDay - 1; i >= 0; i--) {
+                html += `<div class="calendar-day other-month"><span class="day-number">${prev.getDate() - i}</span></div>`;
+            }
+
+            for (let day = 1; day <= last.getDate(); day++) {
+                const key = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const count = guestCounts[key] || 0;
+                const selKey = selectedDate ? getDateKey(selectedDate) : '';
+                const sel = key === selKey;
+                html += `<div class="calendar-day ${count > 0 ? 'has-guests' : ''} ${sel ? 'selected' : ''}" data-date="${key}">
+                    <span class="day-number">${day}</span>
+                    ${count > 0 ? `<span class="guest-count">${count}</span>` : ''}
+                </div>`;
+            }
+
+            const rem = 42 - (startDay + last.getDate());
+            for (let d = 1; d <= rem && d <= 14; d++) {
+                html += `<div class="calendar-day other-month"><span class="day-number">${d}</span></div>`;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = html;
+
+            document.querySelectorAll('.calendar-day:not(.other-month)').forEach(el => {
+                el.onclick = () => {
+                    selectedDate = parseDateKey(el.dataset.date);
+                    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                    el.classList.add('selected');
+                    updateView(selectedDate);
+                };
+            });
+        }
+
+        // ===== 更新視圖 =====
+        function updateView(date) {
+            const roomFilter = document.getElementById('roomTypeFilter').value;
+            const lineFilter = document.getElementById('lineHeadFilter').value;
+
+            const tonightGuests = allBookings.filter(b => {
+                if (!isStayingOnNight(b, date)) return false;
+                if (roomFilter && b.roomType !== roomFilter) return false;
+                if (lineFilter && b.lineHead !== lineFilter) return false;
+                return true;
+            });
+
+            const filteredBookings = allBookings.filter(b => {
+                if (roomFilter && b.roomType !== roomFilter) return false;
+                if (lineFilter && b.lineHead !== lineFilter) return false;
+                return true;
+            });
+            const cumData = getMonthlyStayNights(filteredBookings, date);
+
+            document.getElementById('dateInfo').style.display = 'block';
+            document.getElementById('dateTitle').textContent = formatDateFull(date);
+            document.getElementById('cumLabel').textContent = `📊 ${date.getMonth()+1}/1 ~ ${date.getMonth()+1}/${date.getDate()} 累計`;
+
+            document.getElementById('dayGuests').textContent = tonightGuests.length;
+            document.getElementById('dayBuyCode').textContent = tonightGuests.reduce((s, b) => s + b.buyCode, 0).toLocaleString();
+            document.getElementById('cumNights').textContent = cumData.totalNights;
+
+            renderRoomStats(tonightGuests);
+
+            const dayWash = calcWashingForGuests(tonightGuests);
+            const cumWash = calcWashingFromRoomNights(cumData.roomNights);
+
+            document.getElementById('dayWashing').textContent = dayWash.total.toLocaleString() + ' 萬';
+            document.getElementById('cumWashing').textContent = cumWash.total.toLocaleString() + ' 萬';
+
+            renderCalcGrid('dayCalcGrid', dayWash.details);
+            document.getElementById('dayCalcTotal').textContent = dayWash.total.toLocaleString() + ' 萬';
+
+            renderCalcGrid('cumCalcGrid', cumWash.details);
+            document.getElementById('cumCalcTotal').textContent = cumWash.total.toLocaleString() + ' 萬';
+
+            renderTable(tonightGuests);
+        }
+
+        function renderRoomStats(guests) {
+            const counts = {};
+            guests.forEach(b => { counts[b.roomType] = (counts[b.roomType] || 0) + 1; });
+
+            const el = document.getElementById('roomStats');
+            if (Object.keys(counts).length === 0) {
+                el.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.85rem;">當晚無人住宿</span>';
+                return;
+            }
+            el.innerHTML = Object.keys(counts).sort().map(rt => 
+                `<div class="room-chip"><span class="type">${rt}</span><span class="count">×${counts[rt]}</span></div>`
+            ).join('');
+        }
+
+        function calcWashingForGuests(guests) {
+            const details = [];
+            let total = 0;
+
+            const mass = guests.filter(b => b.massType === 'Mass');
+            const ut = guests.filter(b => b.massType === 'UT$');
+
+            const massCount = {};
+            let massHalf = 0;
+            mass.forEach(b => {
+                massCount[b.roomType] = (massCount[b.roomType] || 0) + 1;
+                if (b.halfDay === 'V') massHalf++;
+            });
+
+            const order = ['RC05', 'RC01', 'JW06', 'JW01', 'JW01T', 'OK01', 'OK01T', 'GM01', 'GM01T'];
+            order.forEach(rt => {
+                const n = massCount[rt] || 0;
+                if (n > 0) {
+                    const rate = WASHING_RATES['Mass'][rt] || 0;
+                    const amt = n * rate;
+                    total += amt;
+                    details.push({ label: `Mass ${rt}`, formula: `${n} 間 × ${rate} 萬`, value: amt });
+                }
+            });
+
+            if (massHalf > 0) {
+                const amt = massHalf * HALF_DAY_RATE['Mass'];
+                total += amt;
+                details.push({ label: 'Mass 半天', formula: `${massHalf} × 30 萬`, value: amt });
+            }
+
+            const utCount = {};
+            ut.forEach(b => { utCount[b.roomType] = (utCount[b.roomType] || 0) + 1; });
+
+            order.forEach(rt => {
+                const n = utCount[rt] || 0;
+                if (n > 0) {
+                    const rate = WASHING_RATES['UT$'][rt] || 0;
+                    const amt = n * rate;
+                    total += amt;
+                    details.push({ label: `UT$ ${rt}`, formula: `${n} 間 × ${rate}`, value: amt });
+                }
+            });
+
+            return { details, total };
+        }
+
+        function calcWashingFromRoomNights(roomNights) {
+            const details = [];
+            let total = 0;
+            const order = ['RC05', 'RC01', 'JW06', 'JW01', 'JW01T', 'OK01', 'OK01T', 'GM01', 'GM01T'];
+
+            order.forEach(rt => {
+                const key = `Mass_${rt}`;
+                const n = roomNights[key] || 0;
+                if (n > 0) {
+                    const rate = WASHING_RATES['Mass'][rt] || 0;
+                    const amt = n * rate;
+                    total += amt;
+                    details.push({ label: `Mass ${rt}`, formula: `${n} 晚 × ${rate} 萬`, value: amt });
+                }
+            });
+
+            order.forEach(rt => {
+                const key = `UT$_${rt}`;
+                const n = roomNights[key] || 0;
+                if (n > 0) {
+                    const rate = WASHING_RATES['UT$'][rt] || 0;
+                    const amt = n * rate;
+                    total += amt;
+                    details.push({ label: `UT$ ${rt}`, formula: `${n} 晚 × ${rate}`, value: amt });
+                }
+            });
+
+            return { details, total };
+        }
+
+        function renderCalcGrid(id, details) {
+            const el = document.getElementById(id);
+            if (details.length === 0) {
+                el.innerHTML = '<div class="calc-item"><span class="calc-label">無資料</span></div>';
+                return;
+            }
+            el.innerHTML = details.map(d => `
+                <div class="calc-item">
+                    <div><div class="calc-label">${d.label}</div><div class="calc-formula">${d.formula}</div></div>
+                    <span class="calc-value">${d.value.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderTable(guests) {
+            document.getElementById('recordCount').textContent = `${guests.length} 筆`;
+            const tbody = document.getElementById('tableBody');
+            
+            if (guests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-secondary);">當晚無人住宿</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = guests.map(b => `
+                <tr>
+                    <td>${b.name}</td>
+                    <td><span class="room-badge room-${b.roomType}">${b.roomType}</span></td>
+                    <td>${formatDate(b.checkIn)}</td>
+                    <td>${formatDate(b.checkOut)}</td>
+                    <td>${b.lineHead}</td>
+                    <td>${b.buyCode}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== 啟動 =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (isLoggedIn) {
+                const pwd = localStorage.getItem('lcc_pwd');
+                if (pwd) {
+                    showApp();
+                    await loadData(pwd);
+                } else {
+                    showLogin();
+                }
+            } else {
+                showLogin();
+            }
+        });
+    </script>
+</body>
+</html>
