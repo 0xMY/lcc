@@ -264,7 +264,7 @@
     <script>
 const API_URL="https://script.google.com/macros/s/AKfycbxEpgtG0Mbof9F95gYUmKIp2Tdm3qQUKdhhkWtNGtMi8ANa1XpIti_SNTUa9yQyyfnW/exec";
 let allBookings=[],currentMonth=new Date(),selectedDate=null;
-const WASHING_RATES={'Mass':{'RC05':500,'RC01':200,'JW06':200,'JW01':80,'JW01T':80,'OK01':80,'OK01T':80,'GM01':80,'GM01T':80},'UT$':{'RC05':7000,'RC01':7000,'JW06':7000,'JW01':6000,'JW01T':6000,'OK01':6000,'OK01T':6000,'GM01':6000,'GM01T':6000}};
+const WASHING_RATES={'Mass':{'RC05':500,'RC01':200,'JW06':200,'JW01':60,'JW01T':60,'OK01':60,'OK01T':60,'GM01':60,'GM01T':60},'UT$':{'RC05':7000,'RC01':7000,'JW06':7000,'JW01':6000,'JW01T':6000,'OK01':6000,'OK01T':6000,'GM01':6000,'GM01T':6000}};
 
 document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.getElementById(tab.dataset.tab+'Tab').classList.add('active');}});
 
